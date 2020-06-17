@@ -2,12 +2,14 @@
 
 # Setup for the local development environment
 
-- npm install synapse
+- **npm install synapse**
 
 - Within the server file, require synapse and invoke it passing in the directory of your resources
 
-  - const { synapse } = require("synapse");
-  - const api = synapse(path.resolve(\_\_dirname, "./resources"));
+```javascript
+const { synapse } = require("synapse");
+const api = synapse(path.resolve(__dirname, "./resources"));
+```
 
 - You can define your own resources during which you can expose endpoints, validate schemes and so on
   - [Basic Setup](https://github.com/nplaner/synapseTutorial/blob/master/server/resources/User.ts)
