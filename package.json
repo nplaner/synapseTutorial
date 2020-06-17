@@ -1,0 +1,26 @@
+{
+  "name": "synapsetutorial",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nplaner/synapseTutorial.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nplaner/synapseTutorial/issues"
+  },
+  "homepage": "https://github.com/nplaner/synapseTutorial#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "express-ws": "^4.0.0",
+    "synapse": "file:../synapse",
+    "typescript": "^3.9.5"
+  }
+}
