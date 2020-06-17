@@ -11,7 +11,7 @@ const api = synapse(path.resolve(__dirname, "./resources"));
 
 - You can define your own resources during which you can expose endpoints, validate schemes and so on
 
-  - ![Basic Setup](https://ibb.co/Tv9KBJ4)
+  - ![Basic Setup](https://i.ibb.co/Tv9KBJ4/Screen-Shot-2020-06-17-at-6-37-18-PM.png)
 
   * This is the basic structure of a Resource class
   * There are a lot of built-in field decorators you can use to verify inputs, like Word(which takes min and max character count)
@@ -27,7 +27,7 @@ const api = synapse(path.resolve(__dirname, "./resources"));
 
 - Code Snippet
 
-  - ![Example](https://ibb.co/FhVHFVk)
+  - ![Example](https://i.ibb.co/p1yhSy6/Screen-Shot-2020-06-17-at-6-37-40-PM.png)
 
   * Our example here defines a method on the User class that is used to register new users and save it to our postgreSQL database.
   * We expose the endpoint "POST /" therefore whenever a post request comes into /api/user we will create an instance of the user fields while excluding the user_id and password and extending the hashing functionality to our password
