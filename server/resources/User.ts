@@ -1,8 +1,9 @@
 /* eslint-disable lines-between-class-members */
-import { Resource, State } from "synapse";
-import { Text, Word } from "synapse/build/lib/fields";
-import { schema, expose } from "synapse/build/lib/abstract/Controllable";
-import { field } from "synapse/build/lib/abstract/Validatable";
+import synapse from "@synapsejs/synapse";
+
+const { Resource, State } = synapse;
+const { Text, Word } = synapse.fields;
+const { schema, expose, field } = synapse.decorators;
 
 class User extends Resource() {
   @field(new Word(3, 16)) username: string;

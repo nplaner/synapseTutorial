@@ -1,5 +1,5 @@
 const express = require("express");
-const { synapse } = require("synapse");
+const synapse = require("@synapsejs/synapse");
 const path = require("path");
 const enableWs = require("express-ws");
 

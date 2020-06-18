@@ -1,53 +1,89 @@
-# Setup for the local development environment
+## Setup for the local development environment
+
+#### Server Setup
 
 - **npm install synapse**
 
-- Within the server file, require synapse and invoke it passing in the directory of your resources
-
 ```javascript
-const { synapse } = require("synapse");
+const synapse = require("@synapsejs/synapse");
+
+const express = require("express");
+const path = require("path");
+const enableWs = require("express-ws");
+
+const app = express();
 const api = synapse(path.resolve(__dirname, "./resources"));
+
+enableWs(app);
+app.ws("/api", api.ws);
+app.use("/api", api.sse, api.http);
+
+api.use((req, res) => {
+  res.status(res.locals.$status()).json(res.locals.render());
+});
 ```
 
-- # You can define your own resources during which you can expose endpoints, validate schemes and so on
+- Within the server file, require synapse and invoke it passing in the directory of your resources.
+- To add Websocket support to your endpoints - simply add .ws method of synapse instance to the route.
+- Similar logic follows HTTP and SSE handling, with a simple rule to follow: .sse method should always come before .http method on your route.
+- api.use middleware is handling all the responses.
 
-  ![Basic Setup](https://i.ibb.co/Tv9KBJ4/Screen-Shot-2020-06-17-at-6-37-18-PM.png)
+Let's draw a simple mental model:
+Any incoming request is being process by its respective method, after going through synapse it'll be sent back to the client from the global api.use response handler.
 
-  - This is the basic structure of a Resource class
-  - There are a lot of built-in field decorators you can use to verify inputs, like Word and Text
-    - Both can take two optional arguments that determine how short or long an accepted input should be
-      - The above example shows how usernames must be 3~16 characters
-  - You can also define your own field decorators to suit your needs, however, most of the basic ones are provided
+#### Code Snippet
 
-  - The schema decorator has access to the methods: select, extend, exclude
+```javascript
+export default class User extends Resource {
+  @field(new MongoId()) _id: string;
+  @field(new Word(3, 16)) username: string;
+  @field(new Email(true)) email: string;
+  @field(new Text(), PRV) password: string;
 
-    - Select creates a new schema containing a subset of the instance's fields.
-      - It takes the names of the fields which should be transferred to the new schema as arguments.
-    - Extend creates a new schema containing all of the current instance's fields along with the additional fields you can pass in.
-    - Exclude creates a new schema containing a subset of the instance's fields excluding those passed-in as arguments.
+  @expose("GET /:_id")
+  @schema(User.schema.select("_id"))
+  static async find({ _id }) {
+    const document = await collection.findById({ _id });
+    if (!document) {
+      return State.NOT_FOUND();
+    }
+    return User.restore(document.toObject());
+  }
 
-  - The expose decorator dynamically creates routes that are specified to the passed in endpoints.
-  - By the time these routes are created, all inputs have been thoroughly verified and sanitized.
+  @expose("POST /")
+  @schema(User.schema.exclude("_id", "password").extend({ password: new Hash(6) }))
+  static async register({ username, email, password }) {
+    const document = await collection.create({ username, email, password });
+    return User.create(document.toObject());
+  }
+}
+```
 
-- # Code Snippet
+- This code snippet demonstrates a sample User class.
+- Note that all classes that are passed to Synapse should extend the Resource class.
+- Next, we have 4 field decorators that define schemas for each user input
 
-  ![Example](https://i.ibb.co/p1yhSy6/Screen-Shot-2020-06-17-at-6-37-40-PM.png)
+  - The first field decorator guarantees that all \_id's follow the MongoId format.
+  - Word and Text take 2 optional arguments that determine how short or long these inputs should be.
+    - In this case, usernames must be within 3~16 characters.
+  - Inputs that go through the Email field go through a RegExp that verifies that they are in the correct format.
 
-  - Here, we have a more complete example of a Resource class.
-  - This example defines a method on the User class that is used to register new users and save it to a SQL database.
-  - We expose the endpoint "POST /" which handles all POST requests to the "/api/user" endpoint.
-  - Next, we hit the schema decorator, which in this case:
+  - It is also possible to edit these fields or even create your own to suit your needs.
 
-    - Excludes the user_id and password fields, removing them from the validation process
-    - Extends(extracts) the password schema and in this case, hashes the password 6 times.
+- The expose decorator dynamically creates routes that are specified to the passed in endpoints.
 
-  - Finally, we are ready to handle the business logic. All inputs to these methods should be in an object.
-  - We first give the method access to the username and password.
-  - We then execute a query that verifies whether or not this user already exists within the database. This is to ensure that each username is unique.a
-  - If the username is unique, we execute another query to add this entry into the database.
+  - Here, we have two exposed endpoints that find a user by id and create a new user, respectively.
+  - Each have their own schemas.
+    - The first uses select, which creates a new schema containing a subset of the instance's fields.
+      - It takes the names of the fields which should be transferred to the new schemas as arguments.
+    - The second uses exclude and extend, which:
+      - Creates a new schema containing a subset of the instance's fields excluding those passed-in as arguments. (exclude)
+      - Creates a new schema containing all of the current instance's fields along with the additional fields you can pass in. (extend)
 
-  - All requests must return an instance of the Resource or State class.
-  - There are many built-in error messages that correspond to their own response status codes.
-    - FORBIDDEN, for example, corresponds to a 403 status code and can return a custom message that is passed in.
-
-- With these simple steps your application is ready to handle any network request coming its way
+- The business logic of these methods is entirely up to you, but must return either an instance of the class you are in, or an instance of [State](https://oslabs-beta.github.io/synapse/classes/reply.html).
+  - These classes have access to the restore and create methods, along with many others.
+    - These two methods attempt to create a new instance of the the class from the plain object in compliance with the Class's schema.
+  - State contains methods that correspond to response errors
+  - They can be passed custom messages to return to the client.
+    - State.NOT_FOUND(), for example, corresponds to a 404 error and will only return this status code.
+    - If it were State.NOT_FOUND("This user does not exist"), this message will be passed along as well.

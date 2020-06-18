@@ -1,14 +1,25 @@
-@expose("POST /")
-  @schema(User.schema.exclude("user_id", "password").extend({ password: new Hash(6) }))
-  static async register({ username, password }) {
-    const findQuery = `SELECT username FROM users WHERE username = '${username}'`;
-    const findResult = await db.query(findQuery);
-    if (!findResult.rows[0]) {
-      const query = `INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *`;
-      const values = [`${username}`, `${password}`];
-      const result = await db.query(query, values); 
-      const toReturn = await User.create(result.rows[0]);
-      return toReturn;
+import { expose } from "@synapsejs/synapse/build/lib/@";
+
+export default class User extends Resource {
+  @field(new MongoId()) _id: string;
+  @field(new Word(3, 16)) username: string;
+  @field(new Email(true)) email: string;
+  @field(new Text(), PRV) password: string;
+
+  @expose("GET /:_id")
+  @schema(User.schema.select("_id"))
+  static async find({ _id }) {
+    const document = await collection.findById({ _id });
+    if (!document) {
+      return State.NOT_FOUND();
     }
-    return State.FORBIDDEN("USERNAME MUST BE UNIQUE");
+    return User.restore(document.toObject());
   }
+
+  @expose("POST /")
+  @schema(User.schema.exclude("_id", "password").extend({ password: new Hash(6) }))
+  static async register({ username, email, password }) {
+    const document = await collection.create({ username, email, password });
+    return User.create(document.toObject());
+  }
+}
