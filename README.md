@@ -2,7 +2,7 @@
 
 #### Server Setup
 
-- **npm install synapse**
+- **npm install @synapsejs**
 
 ```javascript
 const synapse = require("@synapsejs/synapse");
@@ -31,7 +31,7 @@ api.use((req, res) => {
 Let's draw a simple mental model:
 Any incoming request is being process by its respective method, after going through synapse it'll be sent back to the client from the global api.use response handler.
 
-#### Code Snippet
+#### Resource example
 
 ```javascript
 export default class User extends Resource {
@@ -60,8 +60,8 @@ export default class User extends Resource {
 ```
 
 - This code snippet demonstrates a sample User class.
-- Note that all classes that are passed to Synapse should extend the Resource class.
-- Next, we have 4 field decorators that define schemas for each user input
+- Note that all classes that are passed to Synapse should extend the [Resource](https://oslabs-beta.github.io/synapse/classes/resource.html) class.
+- Next, we have 4 field decorators that define [schemas](https://oslabs-beta.github.io/synapse/classes/schema.html) for each user input
 
   - The first field decorator guarantees that all \_id's follow the MongoId format.
   - Word and Text take 2 optional arguments that determine how short or long these inputs should be.
@@ -77,13 +77,13 @@ export default class User extends Resource {
     - The first uses select, which creates a new schema containing a subset of the instance's fields.
       - It takes the names of the fields which should be transferred to the new schemas as arguments.
     - The second uses exclude and extend, which:
-      - Creates a new schema containing a subset of the instance's fields excluding those passed-in as arguments. (exclude)
-      - Creates a new schema containing all of the current instance's fields along with the additional fields you can pass in. (extend)
+      - Creates a new schema containing a subset of the instance's fields excluding those passed-in as arguments. ([exclude](https://oslabs-beta.github.io/synapse/classes/schema.html#exclude))
+      - Creates a new schema containing all of the current instance's fields along with the additional fields you can pass in. ([extend](https://oslabs-beta.github.io/synapse/classes/schema.html#extend))
 
 - The business logic of these methods is entirely up to you, but must return either an instance of the class you are in, or an instance of [State](https://oslabs-beta.github.io/synapse/classes/reply.html).
   - These classes have access to the restore and create methods, along with many others.
     - These two methods attempt to create a new instance of the the class from the plain object in compliance with the Class's schema.
   - State contains methods that correspond to response errors
   - They can be passed custom messages to return to the client.
-    - State.NOT_FOUND(), for example, corresponds to a 404 error and will only return this status code.
-    - If it were State.NOT_FOUND("This user does not exist"), this message will be passed along as well.
+    - [State.NOT_FOUND()](https://oslabs-beta.github.io/synapse/classes/reply.html#not_found), for example, corresponds to a 404 error and will only return this status code.
+    - If it were [State.NOT_FOUND("This user does not exist")](https://oslabs-beta.github.io/synapse/classes/reply.html#not_found), this message will be passed along as well.
