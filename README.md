@@ -2,7 +2,7 @@
 
 #### Server Setup
 
-- **npm install @synapsejs**
+- **npm install @synapsejs/synapse**
 
 ```javascript
 const synapse = require("@synapsejs/synapse");
